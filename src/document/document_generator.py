@@ -1279,7 +1279,7 @@ class DocumentGenerator:
             title: Optional title for the document
             description: Optional description for the document
             speech_segments: Optional list of tuples (timestamp, speech_text) for narrative documentation
-            document_type: Type of document to generate ("kt_document" or "meeting_summary")
+            document_type: Type of document to generate ("kt_document" or "kt_document")
             generate_missing_questions: Whether to generate missing questions section
             generate_process_map: Whether to generate process map diagram
         """
@@ -2092,7 +2092,7 @@ class DocumentGenerator:
         screenshot_context += "- Skip screenshots that don't fit naturally into any section"
         
         # Prepare analysis prompt based on document type
-        if self.document_type == "meeting_summary":
+        if self.document_type == "kt_document":
             # Meeting Summary with metadata
             metadata_info = ""
             if self.meeting_participants:
@@ -2106,62 +2106,58 @@ class DocumentGenerator:
                 metadata_info += f"\nMeeting Duration: {duration}"
             
             prompt = f"""
-            You are a meeting summary generating agent. I'll be providing you the attendees present in meeting and the key discussion ponits in the Meeting Metadata and Meeting transcription. I need you to analyze the transcript and metadata provided from a meeting recording and generate a structured meeting summary document.
-            
-            MEETING METADATA:
-            {metadata_info if metadata_info else "No metadata provided"}
-            
+            I need you to analyze the transcript from a product demo video and generate a structured knowledge transfer document.
+            The video may be a product demo, a discussion about a tool's functionality, or an internal stakeholder meeting about processes or implementations within an organization. Your goal is to capture all critical information, including technical details, workflows, procedures, and discussions, and structure it into a document with clear, step-by-step instructions and explanations. Include screenshots from the video at relevant timestamps to enhance understanding.
+            Donot miss any information from the transcript.
+
             TRANSCRIPT:
             {full_transcript}
             {screenshot_context}
-            
-            This is a MEETING SUMMARY document that should:
-            1. **Start with a "Meeting Information" section** that includes:
-            - Date of meeting
-            - Attendees: {', '.join(self.meeting_participants) if self.meeting_participants else '[From transcript]'}
-            - Meeting Duration: {duration if self.meeting_duration_minutes else '[From transcript]'}
-            - Key Discussion Points as bullet points
-            2. Identify the key discussion points, decisions, and action items from the meeting
-            3. Organize information by discussion topics rather than chronologically
-            4. Highlight important agreements, deadlines, and assigned responsibilities
-            5. Note timestamps where significant points were discussed
-            6. Focus on creating a concise summary that captures the essential outcomes
-            7. Do not omit any important information from the transcript
-            8. Do not generate additional content - everything must be based on the transcript
-            
-            Format your response as JSON with this structure:
+
+            This is a KNOWLEDGE TRANSFER document that should:
+            1. Extract and highlight all technical features, workflows, procedures and processed
+            2. Refence_Document-Focused Structure: Organize the content to be clear and usable as a template or user manual, with step-by-step instructions for processes and clear explanations of functionalities or concepts so that this document can be used as a guide and a manual for anyone referencing it.
+            3. Include explanations of product/process functionality that would help someone understand the process/product
+            4. Identify timestamps where important features or processes are shown (for screenshot placement)
+            5. Focus on creating documentation that could be used as a manual or reference document
+            6. Flexibility for Video Type: Adapt the structure to suit product demos, tool functionality discussions, or internal process discussions. For example:
+            - For product demos, emphasize features, UI navigation, and use cases.
+            - For process discussions, focus on workflows, roles, and implementation steps.
+            - For stakeholder meetings, capture decisions, rationales, and action items.
+            7. Donot generate additional own content. Everything has to be based on the transcript.
+
+            Format your response as a JSON object with the following structure:
             {{
-                "title": "Meeting Summary: [Meeting Topic]",
-                "introduction": "Brief overview of the meeting purpose and participants",
+                "title": "Knowledge Transfer Document: [Product/Process Name or Generic Title if Not Specified]",
+                "introduction": "Purpose and overview of this document.",
                 "sections": [
                     {{
-                        "title": "Meeting Information",
-                        "content": "**Date:** {datetime.now().strftime('%B %d, %Y')}\\n**Attendees:** {', '.join(self.meeting_participants) if self.meeting_participants else 'See discussion'}\\n**Duration:** {duration if self.meeting_duration_minutes else 'See transcript'}\\n\\n**Key Points Discussed:**\\n{chr(10).join(['• ' + h for h in self.meeting_highlights]) if self.meeting_highlights else 'See sections below'}",
-                        "screenshot_timestamps": [],
-                        "subsections": []
-                    }},
-                    {{
-                        "title": "Discussion Topics",
-                        "content": "...",
-                        "screenshot_timestamps": [...],
-                        "subsections": [...]
-                    }},
-                    ...
+                        "title": "Section Title (e.g., 'Product/Process Overview', 'Key Features', 'Workflows', 'Discussion Summary')",
+                        "content": "Detailed explanation with relavant information discussed in the video.",
+                        "screenshot_timestamps": [list of timestamps where screenshots should appear],
+                        "subsections": [
+                            {{
+                                "title": "Subsection Title (e.g., specific feature, procedure, or discussion point)",
+                                "content": "Step-by-step instructions or detailed feature explanations",
+                                "screenshot_timestamps": [list of timestamps for this subsection]
+                            }}
+                        ]
+                    }}
                 ]
             }}
             """
         try:
-            from openai.types.chat import ChatCompletionSystemMessageParam, ChatCompletionUserMessageParam
+            # Removed OpenAI type hints - using LiteLLM with Gemini now
             
             # Prepare system message based on document type
             
-            if self.document_type == "meeting_summary":
-                system_message: ChatCompletionSystemMessageParam = {
+            if self.document_type == "kt_document":
+                system_message = {
                     "role": "system", 
-                    "content": "You are a meeting summary expert. Your task is to analyze meeting transcripts and create structured summaries that capture key discussion points, decisions, and action items."
+                    "content": "You are a knowledge transfer documentation expert. Your task is to analyze product demos and create structured document that can be referenced by anyone who wants to use or continue with the current product or process."
                 }
             
-            user_message: ChatCompletionUserMessageParam = {
+            user_message = {
                 "role": "user", 
                 "content": prompt
             }

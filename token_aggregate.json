@@ -1,12 +1,12 @@
 {
   "openai": {
-    "total": 79897,
+    "total": 89244,
     "by_module": {
       "my_utils": 6515,
       "document_generator": 12950,
       "src.utils.my_utils": 3274,
-      "src.document.document_generator": 43460,
-      "src.utils.media_utils": 13698
+      "src.document.document_generator": 49162,
+      "src.utils.media_utils": 17343
     },
     "by_function": {
       "my_utils.analyze_speech_transcript": 6515,
@@ -16,11 +16,11 @@
       "document_generator._generate_process_map": 1635,
       "src.utils.my_utils.analyze_speech_transcript": 3274,
       "src.document.document_generator._convert_mermaid_to_dot": 18168,
-      "src.document.document_generator._generate_missing_questions": 6341,
-      "src.document.document_generator._generate_process_map": 7133,
-      "src.utils.media_utils.analyze_speech_transcript": 13698,
-      "src.document.document_generator._get_ai_enhanced_reason": 2256,
-      "src.document.document_generator._generate_narrative_documentation": 9562
+      "src.document.document_generator._generate_missing_questions": 7142,
+      "src.document.document_generator._generate_process_map": 8027,
+      "src.utils.media_utils.analyze_speech_transcript": 17343,
+      "src.document.document_generator._get_ai_enhanced_reason": 2667,
+      "src.document.document_generator._generate_narrative_documentation": 13158
     }
   },
   "whisper": {
