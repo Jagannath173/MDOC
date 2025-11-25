@@ -29,4 +29,3 @@ if __name__ == "__main__":
             except ValueError:
                 pass  # Not a port number, use default
         uvicorn.run(app, host="0.0.0.0", port=port)
-

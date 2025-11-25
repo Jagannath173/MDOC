@@ -43,16 +43,13 @@ import logging
 import json
 import os
 
-# Import our centralized OpenAI configuration
+# Import our centralized Gemini configuration
 from ..utils.openai_config import (
-    get_openai_client,
+    get_openai_client,  # Legacy, returns None
     get_chat_model_name,
-    OPENAI_AVAILABLE,
-    USE_AZURE,
-    AZURE_OPENAI_ENDPOINT,
-    AZURE_OPENAI_API_KEY,
-    AZURE_OPENAI_API_VERSION,
-    OPENAI_API_KEY
+    OPENAI_AVAILABLE,  # Alias for GEMINI_AVAILABLE
+    USE_AZURE,  # Always False now
+    GEMINI_AVAILABLE
 )
 import logging
 
@@ -64,7 +61,7 @@ import logging
 import requests
 from io import BytesIO
 from PIL import Image as PILImage
-from openai import AzureOpenAI
+# AzureOpenAI import removed - using Gemini via LiteLLM now
 import json
 
 from reportlab.lib.styles import ParagraphStyle
@@ -109,7 +106,7 @@ import urllib.parse
 from io import BytesIO
 from reportlab.platypus import Paragraph, Spacer, Image
 # Import our centralized OpenAI configuration
-from ..utils.openai_config import get_openai_client, get_chat_model_name, OPENAI_AVAILABLE, USE_AZURE
+from ..utils.openai_config import get_openai_client, get_chat_model_name, OPENAI_AVAILABLE, USE_AZURE, GEMINI_AVAILABLE
 import logging
 
 from ..utils.logger_config import setup_logger
@@ -1263,7 +1260,7 @@ class DocumentGenerator:
     
     def __init__(self, video_path: str, screenshots: List[Tuple[Any, float, str]],
                  use_ai: bool = False, title: str = "", description: str = "",
-                 speech_segments: List[Tuple[float, str]] = [], document_type: str = "general_documentation",
+                 speech_segments: List[Tuple[float, str]] = [], document_type: str = "kt_document",
                  generate_missing_questions: bool = False, generate_process_map: bool = False,
                  include_screenshots: bool = False, meeting_participants: Optional[List[str]] = None,
                  meeting_highlights: Optional[List[str]] = None,
@@ -1279,7 +1276,7 @@ class DocumentGenerator:
             title: Optional title for the document
             description: Optional description for the document
             speech_segments: Optional list of tuples (timestamp, speech_text) for narrative documentation
-            document_type: Type of document to generate ("general_documentation" or "general_documentation")
+            document_type: Type of document to generate ("kt_document" or "meeting_summary")
             generate_missing_questions: Whether to generate missing questions section
             generate_process_map: Whether to generate process map diagram
         """
@@ -1301,7 +1298,7 @@ class DocumentGenerator:
         # Just make sure they're sorted by timestamp
         self.screenshots.sort(key=lambda x: x[1])
         
-        # Initialize OpenAI client if available
+        # Initialize Gemini client via LiteLLM
         self.model = get_chat_model_name()
         self.completion = completion
 
@@ -1309,24 +1306,22 @@ class DocumentGenerator:
         self._litellm_kwargs: Dict[str, Any] = {}
 
         if self.model:
-            self._litellm_model = f"azure/{self.model}" if USE_AZURE else self.model
+            # Use Gemini model name directly (e.g., "gemini/gemini-1.5-pro")
+            self._litellm_model = self.model
 
-        if USE_AZURE and AZURE_OPENAI_API_KEY and AZURE_OPENAI_ENDPOINT:
-            self._litellm_kwargs = {
-                "api_key": AZURE_OPENAI_API_KEY,
-                "api_base": AZURE_OPENAI_ENDPOINT,
-                "base_url": AZURE_OPENAI_ENDPOINT,
-                "api_version": AZURE_OPENAI_API_VERSION or "2024-02-01"
-            }
-        elif not USE_AZURE and OPENAI_API_KEY:
-            self._litellm_kwargs = {"api_key": OPENAI_API_KEY}
+        # Configure Gemini API key via environment variable (LiteLLM will pick it up)
+        # GEMINI_API_KEY is already set in openai_config.py
+        if GEMINI_AVAILABLE:
+            # LiteLLM will automatically use GEMINI_API_KEY from environment
+            self._litellm_kwargs = {}
 
-        self.use_ai = bool(use_ai and self._litellm_model and self._litellm_kwargs)
+        self.use_ai = bool(use_ai and self._litellm_model and GEMINI_AVAILABLE)
 
 
     def _invoke_completion(self, messages: List[Dict[str, Any]], **kwargs):
         """
-        Wrapper around litellm.completion that injects the correct model and Azure/OpenAI credentials.
+        Wrapper around litellm.completion that injects the correct Gemini model.
+        LiteLLM will automatically use GEMINI_API_KEY from environment.
         """
         if not self.use_ai or not self._litellm_model:
             raise RuntimeError("AI completion requested but configuration is unavailable.")
@@ -2157,7 +2152,6 @@ class DocumentGenerator:
                 "role": "user", 
                 "content": prompt
             }
-        
             
             # Call OpenAI API
             try:

@@ -193,7 +193,6 @@ async def process_meeting(
                 "text": text
             })
         
-        # Prepare response with full transcript (like Streamlit)
         response = {
             "success": True,
             "session_guid": result["session_guid"],
@@ -209,7 +208,7 @@ async def process_meeting(
             },
             "screenshots": screenshots_metadata,  # Metadata only
             "screenshots_count": len(result["screenshots"]),
-            "transcript": transcript,  # Full transcript like Streamlit
+            "transcript": transcript,  
             "speech_segments": transcript,  # Alias for compatibility
             "speech_segments_count": len(result["speech_timestamps"]),
             "keyword_results": result.get("keyword_results", []),
@@ -410,4 +409,3 @@ async def generate_meeting_document(
     except Exception as e:
         logger.error(f"Error generating document: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error generating document: {str(e)}")
-
