@@ -1263,7 +1263,7 @@ class DocumentGenerator:
     
     def __init__(self, video_path: str, screenshots: List[Tuple[Any, float, str]],
                  use_ai: bool = False, title: str = "", description: str = "",
-                 speech_segments: List[Tuple[float, str]] = [], document_type: str = "user_story_generator",
+                 speech_segments: List[Tuple[float, str]] = [], document_type: str = "general_documentation",
                  generate_missing_questions: bool = False, generate_process_map: bool = False,
                  include_screenshots: bool = False, meeting_participants: Optional[List[str]] = None,
                  meeting_highlights: Optional[List[str]] = None,
@@ -1279,7 +1279,7 @@ class DocumentGenerator:
             title: Optional title for the document
             description: Optional description for the document
             speech_segments: Optional list of tuples (timestamp, speech_text) for narrative documentation
-            document_type: Type of document to generate ("user_story_generator" or "user_story_generator")
+            document_type: Type of document to generate ("general_documentation" or "general_documentation")
             generate_missing_questions: Whether to generate missing questions section
             generate_process_map: Whether to generate process map diagram
         """
@@ -2092,7 +2092,7 @@ class DocumentGenerator:
         screenshot_context += "- Skip screenshots that don't fit naturally into any section"
         
         # Prepare analysis prompt based on document type
-        if self.document_type == "user_story_generator":
+        if self.document_type == "general_documentation":
             # Meeting Summary with metadata
             metadata_info = ""
             if self.meeting_participants:
@@ -2106,37 +2106,36 @@ class DocumentGenerator:
                 metadata_info += f"\nMeeting Duration: {duration}"
             
             prompt = f"""
-            I need you to analyze the transcript from a requirements discussion or a meeting and generate well-structured user stories.
+            I need you to analyze the transcript from a video and generate a comprehensive general documentation document.
 
             TRANSCRIPT:
             {full_transcript}
             {screenshot_context}
 
-            This is a USER STORY GENERATOR document that should:
-            1. Identify and extract user requirements from the discussion
-            2. Format each requirement as a proper user story following the format "As a [type of user], I want [goal] so that [benefit]"
-            3. Add acceptance criteria for each user story
-            4. Group related user stories into epics or features
-            5. Identify timestamps where requirements are being discussed (for screenshot placement)
-            6. Assign priority levels to user stories when possible (High/Medium/Low)
-            8. There might be other relevant information in the discussion as well. Capture all useful information from the discussion.
-            9. Donot generate additional own content. Everything has to be based on the transcript.
+            This is a GENERAL DOCUMENTATION document that should:
+            1. Include the entire speech content, refined and organized but preserving all important information
+            2. Structure the content in a logical flow that follows the narrative of the video
+            3. Maintain the chronological order of information while organizing it into related sections
+            4. Identify timestamps throughout the document where screenshots would enhance understanding
+            5. Focus on creating a complete documentation that captures the full content with visual aids
+            6. Donot omit any important information. If there are key decisions taken or promises made, include it in the document.
+            7. Donot generate additional own content. Everything has to be based on the transcript.
 
 
             Format your response as a JSON object with the following structure:
             {{
-                "title": "User Stories: [Project Name]",
-                "introduction": "Collection of user stories derived from requirements discussions for [Project Name]",
+                "title": "Documentation: [Content Name]",
+                "introduction": "Overview of the content and purpose of this document",
                 "sections": [
                     {{
-                        "title": "Epic/Feature Name",
-                        "content": "Overview of this group of related user stories",
-                        "screenshot_timestamps": [list of timestamps where requirements for this epic were discussed],
+                        "title": "Section Title (based on the content's natural sections)",
+                        "content": "Full and refined speech content for this section, preserving all important details",
+                        "screenshot_timestamps": [list of timestamps where screenshots should be placed in this section],
                         "subsections": [
                             {{
-                                "title": "User Story: [Brief Story Title]",
-                                "content": "As a [user type], I want [goal] so that [benefit]\\n\\nAcceptance Criteria:\\n- Criterion 1\\n- Criterion 2\\n\\nPriority: [priority level]",
-                                "screenshot_timestamps": [list of timestamps relevant to this specific user story]
+                                "title": "Subsection Title (for logical breaks in content)",
+                                "content": "Detailed content with all important information preserved",
+                                "screenshot_timestamps": [list of timestamps for visual aids in this subsection]
                             }}
                         ]
                     }}
@@ -2148,10 +2147,10 @@ class DocumentGenerator:
             
             # Prepare system message based on document type
             
-            if self.document_type == "user_story_generator":
+            if self.document_type == "general_documentation":
                 system_message = {
                     "role": "system", 
-                    "content": "You are a requirements analysis expert. Your task is to extract user stories from discussions and format them in a structured way with clear acceptance criteria."
+                    "content": "You are a comprehensive documentation expert. Your task is to preserve the complete narrative while organizing it into a well-structured document with appropriate sections, keeping the full content intact but refined for readability."
                 }
             
             user_message = {
