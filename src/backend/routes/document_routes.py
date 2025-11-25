@@ -55,7 +55,7 @@ async def upload_meeting(
 
 
 @router.post("/generate/meeting-summary")
-async def generate_kt_document(
+async def generate_user_story_generator(
     doc_title: str = Form(...),
     session_guid: str = Form(...),
     doc_format: str = Form("PDF"),
@@ -82,7 +82,7 @@ async def generate_kt_document(
     """
     return await document_controller.generate_meeting_document(
         doc_title=doc_title,
-        doc_type="kt_document",
+        doc_type="user_story_generator",
         doc_format=doc_format,
         enable_missing_questions=enable_missing_questions,
         enable_process_map=enable_process_map,

@@ -466,7 +466,7 @@ def main():
 
         with sub_column2:
             doc_type_options = {
-                "kt_document": "📝 kt_document", 
+                "user_story_generator": "📝 user_story_generator", 
 
             }
 
@@ -555,7 +555,7 @@ def main():
             with main_tab1:
                 # Enhanced document downloads table
                 doc_type_options = {
-                    "kt_document": "📝 Meeting Summary", 
+                    "user_story_generator": "📝 Meeting Summary", 
                 }
                 
                 
