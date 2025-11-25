@@ -54,7 +54,7 @@ from pydub.utils import which
 # Import configuration
 from src.utils.config_loader import get_config_loader
 from src.utils.media_utils import get_video_info, format_timestamp
-from src.utils.openai_config import get_openai_client, get_chat_model_name, OPENAI_AVAILABLE
+from src.utils.openai_config import get_chat_model_name, OPENAI_AVAILABLE  # OPENAI_AVAILABLE is alias for GEMINI_AVAILABLE
 from src.utils.audit_logger import Logger
 from src.utils.cost_logger import UsageCostLogger
 from src.utils.usage_cost_extractor import extract_token_usage_from_app_log
@@ -181,13 +181,12 @@ def extract_meeting_attendees(speech_segments: List[Tuple[float, str]], client: 
         Do NOT include any other text, just the JSON array.
         """
         
-        if client is None:
-            client = get_openai_client()
         if model is None:
             model = get_chat_model_name()
         
+        # Use Gemini via LiteLLM (no client needed)
         response = completion(
-            model=f"azure/{model}",
+            model=model,  # Use Gemini model directly (e.g., "gemini/gemini-1.5-pro")
             messages=[
                 {"role": "system", "content": "You are an expert at identifying speakers in meetings. Extract attendee names from transcripts."},
                 {"role": "user", "content": prompt}
@@ -254,13 +253,12 @@ def extract_meeting_highlights(speech_segments: List[Tuple[float, str]], client:
         Do NOT include any other text, just the JSON array.
         """
         
-        if client is None:
-            client = get_openai_client()
         if model is None:
             model = get_chat_model_name()
         
+        # Use Gemini via LiteLLM (no client needed)
         response = completion(
-            model=f"azure/{model}",
+            model=model,  # Use Gemini model directly (e.g., "gemini/gemini-1.5-pro")
             messages=[
                 {"role": "system", "content": "You are an expert at identifying key points in meetings. Extract the most important discussion points from transcripts."},
                 {"role": "user", "content": prompt}
@@ -468,7 +466,7 @@ def generate_document(
     screenshots: List[Tuple[Any, float, str]],
     client_name: str,
     doc_title: str,
-    doc_type: str = "kt_document",
+    doc_type: str = "K",
     doc_format: str = "PDF",
     speech_segments: Optional[List[Tuple[float, str]]] = None,
     enable_missing_questions: bool = True,
@@ -486,7 +484,7 @@ def generate_document(
         screenshots: List of (image, timestamp, reason) tuples
         client_name: Name of the client
         doc_title: Title for the document
-        doc_type: Type of document ("kt_document")
+        doc_type: Type of document ("kt_document", "meeting_summary", "user_story_generator", "general_documentation")
         doc_format: Output format ("PDF", "DOCX", "Both")
         speech_segments: Optional list of (timestamp, text) tuples
         enable_missing_questions: Include missing questions section
@@ -786,4 +784,3 @@ if __name__ == "__main__":
     ffmpeg_path = r'ffmpeg-master-latest-win64-gpl\bin'
     os.environ['PATH'] = ffmpeg_path + os.pathsep + os.environ.get('PATH', '')
     main_cli()
-
